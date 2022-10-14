@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.c>
+#include <windows.h>
 
 typedef struct {
     int id;
@@ -36,7 +36,7 @@ int main() {
 }
 
 void productInfo(Product prod) {
-    printf("ID: %d\nName: %s\nPrice: $ %.2f", prod.id, strtok(prod.name, "\n"), prod.price);
+    printf("ID: %d\nName: %s\nPrice: $ %.2f\n", prod.id, strtok(prod.name, "\n"), prod.price);
 }
 
 void menu() {
@@ -90,7 +90,7 @@ void menu() {
 
             if(sure == 'Y') {
                 printf("Thank you for using our app!");
-                Sleep(2);
+                Sleep(2000);
                 exit(0);
             } else {
                 break;
@@ -115,6 +115,9 @@ void createProduct() {
 
     products[product_counter].id = product_counter+1;
     product_counter++;
+
+    Sleep(2000);
+    menu();
 }
 
 void listProducts() {
@@ -124,29 +127,136 @@ void listProducts() {
         for (int i = 0; i < product_counter; i++) {
             productInfo(products[i]);
             printf("==============================\n");
-            sleep(1);
         }
+        printf("\n");
+        Sleep(2000);
+        menu();
     } else {
-        printf("There are no products in the database.");
+        printf("There are no products in the database.\n");
+        Sleep(2000);
+        menu();
     }
 }
 
 void addToCart() {
+    if(product_counter > 0) {
+        printf("Please select a product from the list below:\n\n");
+        Sleep(1000);
+        printf("============ Products: ============\n");
+        printf("===================================\n\n");
+        for (int i = 0; i < product_counter; i++) {
+            productInfo(products[i]);
+            printf("==============================\n");
+        }
+        int id;
+        scanf("%d", &id);
+        getchar();
 
+        int exists = 0;
+        for(int i = 0; i < product_counter; i++) {
+            if(products[i].id == id) {
+                exists = 1;
+                if(cart_counter > 0) {
+                    int * res = productInCart(id);
+                    if(res[0] == 1) {
+                        cart[res[1]].quantity++;
+                        printf("Quantity increased in cart for product: %s\n", cart[res[1]].product.name);
+                        Sleep(2000);
+                        menu();
+                    } else {
+                        Product p = getProductById(id);
+                        cart[cart_counter].product = p;
+                        cart[cart_counter].quantity = 1;
+                        cart_counter++;
+                        printf("Added new product to cart: %s\n", strtok(p.name, "\n"));
+                        Sleep(2000);
+                        menu();
+                    }
+                } else {
+                    Product p = getProductById(id);
+                    cart[cart_counter].product = p;
+                    cart[cart_counter].quantity = 1;
+                    cart_counter++;
+                    printf("Added new product to cart: %s\n", strtok(p.name, "\n"));
+                    Sleep(2000);
+                    menu();
+                }
+            }
+        }
+        if(exists < 1) {
+            printf("ID no. %d not found in product database.\n", id);
+            Sleep(2000);
+            menu();
+        }
+
+    } else {
+        printf("There are no products in the database.\n");
+        Sleep(2000);
+        menu();
+    }
 }
 
 void goToCart() {
-
+    if(cart_counter > 0) {
+        printf("Products added to cart:\n");
+        printf("=======================\n");
+        for(int i = 0; i < cart_counter; i++) {
+            productInfo(cart[i].product);
+            printf("Quantity: %d\n", cart[i].quantity);
+            printf("=============\n");
+        }
+        Sleep(2000);
+        menu();
+    } else {
+        printf("The cart is empty.\n");
+        Sleep(2000);
+        menu();
+    }
 }
 
 Product getProductById(int id) {
-
+    Product p;
+    for(int i = 0; i < product_counter; i++) {
+        if(products[i].id == id) {
+            p = products[i];
+        }
+    }
+    return p;
 }
 
 int * productInCart(int id) {
-
+    int static res[] = {0, 0};
+    for(int i = 0; i < cart_counter; i++) {
+        if(cart[i].product.id == id) {
+            res[0] = 1;
+            res[1] = i;
+        }
+    }
+    return res;
 }
 
 void checkout() {
-
+    if(cart_counter > 0) {
+        float total = 0.0;
+        printf("Products added to cart:\n");
+        printf("=======================\n");
+        for(int i = 0; i < cart_counter; i++) {
+            Product p = cart[i].product;
+            int quantity = cart[i].quantity;
+            total += p.price * quantity;
+            productInfo(p);
+            printf("Quantity: %d\n", quantity);
+            printf("=============\n");
+        }
+        printf("Your total is $ %.2f\n", total);
+        Sleep(3000);
+        cart_counter = 0;
+        printf("Thank you for your patronage!\n");
+        Sleep(3000);
+        menu();
+    } else {
+        printf("Your cart is currently empty!\n");
+        Sleep(3000);
+        menu();
+    }
 }
